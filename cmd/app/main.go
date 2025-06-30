@@ -9,6 +9,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"remnawave-tg-shop-bot/internal/cache"
@@ -21,6 +22,7 @@ import (
 	"remnawave-tg-shop-bot/internal/remnawave"
 	"remnawave-tg-shop-bot/internal/sync"
 	"remnawave-tg-shop-bot/internal/translation"
+	"remnawave-tg-shop-bot/internal/tribute"
 	"remnawave-tg-shop-bot/internal/yookasa"
 	"strconv"
 	"strings"
@@ -52,6 +54,7 @@ func main() {
 	customerRepository := database.NewCustomerRepository(pool)
 	purchaseRepository := database.NewPurchaseRepository(pool)
 	referralRepository := database.NewReferralRepository(pool)
+	tributeRepo := database.NewTributeRepository(pool)
 
 	cryptoPayClient := cryptopay.NewCryptoPayClient(config.CryptoPayUrl(), config.CryptoPayToken())
 	remnawaveClient := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
@@ -128,6 +131,16 @@ func main() {
 	b.RegisterHandlerMatchFunc(func(update *models.Update) bool {
 		return update.Message != nil && update.Message.SuccessfulPayment != nil
 	}, h.SuccessPaymentHandler)
+
+	if config.TributeEnabled() {
+		tributeServer := tribute.NewServer(tributeRepo, customerRepository, remnawaveClient, tm, b)
+		go func() {
+			slog.Info("Tribute webhook server starting", "addr", config.TributeWebhookAddr())
+			if err := http.ListenAndServe(config.TributeWebhookAddr(), tributeServer); err != nil {
+				slog.Error("tribute webhook server error", "error", err)
+			}
+		}()
+	}
 
 	slog.Info("Bot is starting...")
 	b.Start(ctx)
