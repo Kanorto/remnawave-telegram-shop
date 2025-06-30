@@ -185,3 +185,50 @@ func getNewExpire(daysToAdd int, currentExpire time.Time) time.Time {
 
 	return currentExpire.AddDate(0, 0, daysToAdd)
 }
+
+func (r *Client) UpdateExpireAt(ctx context.Context, customerId int64, telegramId int64, newExpire time.Time) (*remapi.UserDto, error) {
+	resp, err := r.client.UsersControllerGetUserByTelegramId(ctx, remapi.UsersControllerGetUserByTelegramIdParams{TelegramId: strconv.FormatInt(telegramId, 10)})
+	if err != nil {
+		return nil, err
+	}
+
+	switch v := resp.(type) {
+	case *remapi.UsersControllerGetUserByTelegramIdNotFound:
+		days := int(time.Until(newExpire).Hours() / 24)
+		if days < 1 {
+			days = 1
+		}
+		return r.createUser(ctx, customerId, telegramId, config.TrafficLimit(), days)
+	case *remapi.UsersDto:
+		var existingUser *remapi.UserDto
+		for _, panelUser := range v.GetResponse() {
+			if strings.Contains(panelUser.Username, fmt.Sprintf("_%d", telegramId)) {
+				existingUser = &panelUser
+			}
+		}
+		if existingUser == nil {
+			existingUser = &v.GetResponse()[0]
+		}
+
+		update := &remapi.UpdateUserRequestDto{
+			UUID:              existingUser.UUID,
+			ExpireAt:          remapi.NewOptDateTime(newExpire),
+			Status:            remapi.NewOptUpdateUserRequestDtoStatus(remapi.UpdateUserRequestDtoStatusACTIVE),
+			TrafficLimitBytes: remapi.NewOptInt(config.TrafficLimit()),
+		}
+
+		if ctx.Value("username") != nil {
+			update.Description = remapi.NewOptNilString(ctx.Value("username").(string))
+		}
+
+		updated, err := r.client.UsersControllerUpdateUser(ctx, update)
+		if err != nil {
+			return nil, err
+		}
+		tgid, _ := existingUser.TelegramId.Get()
+		slog.Info("updated user expire", "telegramId", utils.MaskHalf(strconv.Itoa(tgid)), "newExpire", newExpire)
+		return &updated.Response, nil
+	default:
+		return nil, errors.New("unknown response type")
+	}
+}

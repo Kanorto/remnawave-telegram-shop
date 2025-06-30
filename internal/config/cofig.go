@@ -45,6 +45,8 @@ type config struct {
 	inboundUUIDs           map[uuid.UUID]uuid.UUID
 	referralDays           int
 	miniApp                string
+	tributeAPIKey          string
+	tributeWebhookAddr     string
 }
 
 var conf config
@@ -67,6 +69,18 @@ func TrialTrafficLimit() int {
 
 func TrialDays() int {
 	return conf.trialDays
+}
+
+func TributeAPIKey() string {
+	return conf.tributeAPIKey
+}
+
+func TributeWebhookAddr() string {
+	return conf.tributeWebhookAddr
+}
+
+func TributeEnabled() bool {
+	return conf.tributeAPIKey != "" && conf.tributeWebhookAddr != ""
 }
 func FeedbackURL() string {
 	return conf.feedbackURL
@@ -392,6 +406,9 @@ func InitConfig() {
 	conf.channelURL = os.Getenv("CHANNEL_URL")
 	conf.tosURL = os.Getenv("TOS_URL")
 
+	conf.tributeAPIKey = os.Getenv("TRIBUTE_API_KEY")
+	conf.tributeWebhookAddr = os.Getenv("TRIBUTE_WEBHOOK_ADDR")
+
 	inboundUUIDsStr := os.Getenv("INBOUND_UUIDS")
 	if inboundUUIDsStr != "" {
 		uuids := strings.Split(inboundUUIDsStr, ",")
@@ -408,5 +425,9 @@ func InitConfig() {
 	} else {
 		conf.inboundUUIDs = map[uuid.UUID]uuid.UUID{}
 		slog.Info("No inbound UUIDs specified, all will be used")
+	}
+
+	if conf.tributeAPIKey == "" || conf.tributeWebhookAddr == "" {
+		slog.Warn("Tribute integration disabled: env vars not set")
 	}
 }

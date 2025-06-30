@@ -66,6 +66,8 @@ The application requires the following environment variables to be set:
 | `TRIAL_TRAFFIC_LIMIT`    | Maximum allowed traffic in gb for trial subscriptions                                                                                        |     
 | `TRIAL_DAYS`             | Number of days for trial subscriptions. if 0 = disabled.                                                                                     |
 | `INBOUND_UUIDS`          | Comma-separated list of inbound UUIDs to assign to users (e.g., "773db654-a8b2-413a-a50b-75c3536238fd,bc979bdd-f1fa-4d94-8a51-38a0f518a2a2") |
+| `TRIBUTE_API_KEY`        | API key for Tribute webhook signature verification |
+| `TRIBUTE_WEBHOOK_ADDR`   | Address for Tribute webhook server (e.g., ":8080") |
 
 ## User Interface
 
@@ -129,6 +131,9 @@ mv .env.sample .env
    ```bash
    docker compose up -d
    ```
+
+4. In the Tribute dashboard generate an API key and set the webhook URL to `http://<your-server-address>/` combined with the value of `TRIBUTE_WEBHOOK_ADDR`.
+   The bot will automatically validate requests using the key from `TRIBUTE_API_KEY`.
 
 ## How to change bot messages
 
