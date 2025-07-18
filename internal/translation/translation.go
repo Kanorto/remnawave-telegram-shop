@@ -17,6 +17,17 @@ type Manager struct {
 	mu              sync.RWMutex
 }
 
+func (tm *Manager) HasText(lang, key string) bool {
+	tm.mu.RLock()
+	defer tm.mu.RUnlock()
+	if tr, ok := tm.translations[lang]; ok {
+		if _, ok := tr[key]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 var (
 	instance *Manager
 	once     sync.Once

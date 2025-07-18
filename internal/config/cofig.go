@@ -29,6 +29,7 @@ type config struct {
 	isCryptoEnabled                                           bool
 	isTelegramStarsEnabled                                    bool
 	adminTelegramId                                           int64
+	adminTelegramIds                                          []int64
 	trialDays                                                 int
 	inboundUUIDs                                              map[uuid.UUID]uuid.UUID
 	referralDays                                              int
@@ -197,6 +198,16 @@ func GetAdminTelegramId() int64 {
 	return conf.adminTelegramId
 }
 
+func GetAdminTelegramIds() []int64 {
+	if len(conf.adminTelegramIds) > 0 {
+		return conf.adminTelegramIds
+	}
+	if conf.adminTelegramId != 0 {
+		return []int64{conf.adminTelegramId}
+	}
+	return []int64{}
+}
+
 func GetHealthCheckPort() int {
 	return conf.healthCheckPort
 }
@@ -207,6 +218,15 @@ func IsWepAppLinkEnabled() bool {
 
 func GetXApiKey() string {
 	return conf.xApiKey
+}
+
+func IsAdmin(id int64) bool {
+	for _, a := range GetAdminTelegramIds() {
+		if a == id {
+			return true
+		}
+	}
+	return false
 }
 
 const bytesInGigabyte = 1073741824
@@ -252,8 +272,21 @@ func InitConfig() {
 	}
 	var err error
 	conf.adminTelegramId, err = strconv.ParseInt(os.Getenv("ADMIN_TELEGRAM_ID"), 10, 64)
-	if err != nil {
+	if err != nil && os.Getenv("ADMIN_TELEGRAM_ID") != "" {
 		panic("ADMIN_TELEGRAM_ID .env variable not set")
+	}
+
+	ids := os.Getenv("ADMIN_IDS")
+	if ids != "" {
+		parts := strings.Split(ids, ",")
+		for _, p := range parts {
+			id, err := strconv.ParseInt(strings.TrimSpace(p), 10, 64)
+			if err == nil {
+				conf.adminTelegramIds = append(conf.adminTelegramIds, id)
+			}
+		}
+	} else if conf.adminTelegramId != 0 {
+		conf.adminTelegramIds = []int64{conf.adminTelegramId}
 	}
 
 	conf.telegramToken = mustEnv("TELEGRAM_TOKEN")

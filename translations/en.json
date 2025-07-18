@@ -22,9 +22,9 @@
   "tos_button": "Terms Of Service",
   "subscription_expiring": "⚠️ <b>Subscription Alert</b> ⚠️\n\nYour subscription expires on %s\nTo continue using the service, please renew your subscription",
   "renew_subscription_button": "🔄 Renew Subscription",
-  "invoice_description" : "Subscription",
-  "invoice_label" : "Subscription",
-  "invoice_title" : "Subscription",
+  "invoice_description": "Subscription",
+  "invoice_label": "Subscription",
+  "invoice_title": "Subscription",
   "trial_button": "🔥 Try for free",
   "trial_activated": "Trial period activated",
   "trial_text": "Your trial version is active",
@@ -34,6 +34,9 @@
   "referral_bonus_granted": "You have received a referral bonus!",
   "stars_button": " ⭐Telegram Stars",
   "share_referral_button": "Share!",
+  "user_banned": "User banned",
+  "user_unbanned": "User unbanned",
+  "stats_template": "Users: %d\nBanned: %d\nActive: %d",
   "web_app_button_text": "Connect",
   "tribute_button": "Tribute"
 }
