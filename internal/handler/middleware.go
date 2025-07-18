@@ -21,6 +21,16 @@ func (h Handler) CreateCustomerIfNotExistMiddleware(next bot.HandlerFunc) bot.Ha
 			telegramId = update.CallbackQuery.From.ID
 			langCode = update.CallbackQuery.From.LanguageCode
 		}
+
+		banned, err := h.bannedRepository.IsBanned(ctx, telegramId)
+		if err != nil {
+			slog.Error("error checking banned user", err)
+			return
+		}
+		if banned {
+			return
+		}
+
 		existingCustomer, err := h.customerRepository.FindByTelegramId(ctx, telegramId)
 		if err != nil {
 			slog.Error("error finding customer by telegram id", err)
@@ -48,6 +58,32 @@ func (h Handler) CreateCustomerIfNotExistMiddleware(next bot.HandlerFunc) bot.Ha
 			}
 		}
 
+		if update.Message != nil {
+			_ = h.logRepository.Log(context.Background(), telegramId, "message", update.Message.Text)
+		} else if update.CallbackQuery != nil {
+			_ = h.logRepository.Log(context.Background(), telegramId, "callback", update.CallbackQuery.Data)
+		}
+
+		next(ctx, b, update)
+	}
+}
+
+func (h Handler) BannedMiddleware(next bot.HandlerFunc) bot.HandlerFunc {
+	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		var telegramId int64
+		if update.Message != nil {
+			telegramId = update.Message.From.ID
+		} else if update.CallbackQuery != nil {
+			telegramId = update.CallbackQuery.From.ID
+		}
+		banned, err := h.bannedRepository.IsBanned(ctx, telegramId)
+		if err != nil {
+			slog.Error("error checking banned user", err)
+			return
+		}
+		if banned {
+			return
+		}
 		next(ctx, b, update)
 	}
 }

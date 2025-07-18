@@ -332,3 +332,25 @@ func (cr *CustomerRepository) DeleteByNotInTelegramIds(ctx context.Context, tele
 	return nil
 
 }
+
+func (cr *CustomerRepository) Count(ctx context.Context) (int, error) {
+	query := sq.Select("count(*)").From("customer").PlaceholderFormat(sq.Dollar)
+	sqlStr, args, err := query.ToSql()
+	if err != nil {
+		return 0, err
+	}
+	var cnt int
+	err = cr.pool.QueryRow(ctx, sqlStr, args...).Scan(&cnt)
+	return cnt, err
+}
+
+func (cr *CustomerRepository) CountActive(ctx context.Context) (int, error) {
+	query := sq.Select("count(*)").From("customer").Where(sq.And{sq.NotEq{"expire_at": nil}, sq.Gt{"expire_at": sq.Expr("NOW()")}}).PlaceholderFormat(sq.Dollar)
+	sqlStr, args, err := query.ToSql()
+	if err != nil {
+		return 0, err
+	}
+	var cnt int
+	err = cr.pool.QueryRow(ctx, sqlStr, args...).Scan(&cnt)
+	return cnt, err
+}

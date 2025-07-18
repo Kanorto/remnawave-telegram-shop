@@ -34,6 +34,9 @@
   "referral_bonus_granted": "Вы получили бонус за реферала!",
   "stars_button": " ⭐Telegram Stars",
   "share_referral_button": "Поделиться!",
+  "user_banned": "Пользователь заблокирован",
+  "user_unbanned": "Пользователь разблокирован",
+  "stats_template": "Пользователей: %d\nЗабанено: %d\nАктивных подписок: %d",
   "web_app_button_text": "🔌 Подключиться",
-  "tribute_button" : "Tribute"
+  "tribute_button": "Tribute"
 }

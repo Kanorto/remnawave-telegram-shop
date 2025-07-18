@@ -1,0 +1,4 @@
+CREATE TABLE banned_user (
+    telegram_id BIGINT PRIMARY KEY,
+    banned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
